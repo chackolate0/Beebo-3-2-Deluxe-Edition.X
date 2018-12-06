@@ -59,7 +59,10 @@
 
 int clockwise = 1100;
 int counterClockwise = 1900;
-enum modes {TEST, READY};
+
+enum modes {
+    TEST, READY
+};
 int mode = TEST;
 int micInput;
 int btnlock = 0;
@@ -69,8 +72,14 @@ int counter = 0;
 int running = 0;
 int timing = 0;
 
-enum directions {LEFT, RIGHT, CENTER};
+enum directions {
+    LEFT, RIGHT, CENTER
+};
 int direction = CENTER;
+
+int ultDist;
+int distance;
+char msg[80];
 
 int main(void) {
     LCD_Init();
@@ -87,8 +96,9 @@ int main(void) {
     delay_ms(100);
     TONE_Init();
     delay_ms(100);
-    
-    
+    ULTR_Init(0,1,0,2);
+
+
     INTConfigureSystem(INT_SYSTEM_CONFIG_MULT_VECTOR);
     OpenCoreTimer(CORE_TICK_RATE); //CoreTimer used for tenths of second capture
     mConfigIntCoreTimer((CT_INT_ON | CT_INT_PRIOR_5 | CT_INT_SUB_PRIOR_0));
@@ -96,61 +106,60 @@ int main(void) {
     LCD_WriteStringAtPos("Beebo 3:2", 1, 0);
     update_SSD(0);
     //celebrationSong();
-    while(1) {
-        if(BTN_GetValue('U')){
-        moveForward();
-        delay_ms(1500);
-        running = 1;
-        
+    while (1) {
+        readUltr();
+        if (BTN_GetValue('U')) {
+            moveForward();
+            delay_ms(1500);
+            running = 1;
+
         }
-        
-        if(mode == TEST){
+
+        if (mode == TEST) {
             sprintf(topRow, "TM:1 MODE:TEST ");
-        }
-        else{
+        } else {
             sprintf(topRow, "TM:1 MODE:READY");
         }
         LCD_WriteStringAtPos(topRow, 0, 0);
-        if(mode == TEST){
+        if (mode == TEST) {
             micInput = MIC_Val();
-            if(micInput > 512){
-                LED_SetValue(0,1);
+            if (micInput > 512) {
+                LED_SetValue(0, 1);
             }
-            if(micInput > 565){
-                LED_SetValue(1,1);
+            if (micInput > 565) {
+                LED_SetValue(1, 1);
             }
-            if(micInput > 577){
-                LED_SetValue(2,1);
+            if (micInput > 577) {
+                LED_SetValue(2, 1);
             }
-            if(micInput > 642){
-                LED_SetValue(3,1);
+            if (micInput > 642) {
+                LED_SetValue(3, 1);
             }
-            if(micInput > 707){
-                LED_SetValue(4,1);
+            if (micInput > 707) {
+                LED_SetValue(4, 1);
                 //delay_ms(200);
             }
-            if(micInput > 772){
-                LED_SetValue(5,1);
+            if (micInput > 772) {
+                LED_SetValue(5, 1);
             }
-            if(micInput > 837){
-                LED_SetValue(6,1);
+            if (micInput > 837) {
+                LED_SetValue(6, 1);
             }
-            if(micInput > 902){
-                LED_SetValue(7,1);
-            }
-            else{
+            if (micInput > 902) {
+                LED_SetValue(7, 1);
+            } else {
                 LED_SetGroupValue(0);
             }
         }
 
-        if(mode == READY){
+        if (mode == READY) {
             micInput = MIC_Val();
-            if(micInput > 707){
+            if (micInput > 707) {
                 counter = 0;
                 //LCD_WriteStringAtPos("ONE",1,0);
                 delay_ms(50);
                 micInput = MIC_Val();
-                if((micInput > 707) && (counter < 1000000)){
+                if ((micInput > 707) && (counter < 1000000)) {
                     //LCD_WriteStringAtPos("TWO",1,4);
                     running = 1;
                     moveForward();
@@ -158,26 +167,26 @@ int main(void) {
                 }
             }
         }
-        while(running){
+        while (running) {
             timing = 1;
-            
-            while(PMODS_GetValue(1,1) && PMODS_GetValue(1,2) && PMODS_GetValue(1,3) && PMODS_GetValue(1,4)) {
-                if(direction==LEFT){
-                    
+
+            while (PMODS_GetValue(1, 1) && PMODS_GetValue(1, 2) && PMODS_GetValue(1, 3) && PMODS_GetValue(1, 4)) {
+                if (direction == LEFT) {
+
                     moveForward();
                     delay_ms(3500);
                     turnRightSharp();
                     delay_ms(1200);
-                    direction=CENTER;
+                    direction = CENTER;
                 }
-                if(direction==RIGHT){
+                if (direction == RIGHT) {
                     moveForward();
                     delay_ms(3500);
                     turnLeftSharp();
                     delay_ms(1200);
-                    direction=CENTER;
+                    direction = CENTER;
                 }
-                
+
                 moveForward();
             }
             /*while(PMODS_GetValue(1,1) && !PMODS_GetValue(1,2) && !PMODS_GetValue(1,3) && !PMODS_GetValue(1,4)) {
@@ -186,25 +195,23 @@ int main(void) {
             /*while(!PMODS_GetValue(1,1) && !PMODS_GetValue(1,2) && !PMODS_GetValue(1,3) && PMODS_GetValue(1,4)) {
                 turnLeftSharp();
             }*/
-            while(!PMODS_GetValue(1,1) && !PMODS_GetValue(1,2) && !PMODS_GetValue(1,3) && PMODS_GetValue(1,4)) {
+            while (!PMODS_GetValue(1, 1) && !PMODS_GetValue(1, 2) && !PMODS_GetValue(1, 3) && PMODS_GetValue(1, 4)) {
                 turnRightSharp();
                 delay_ms(1500);
                 moveForward();
                 delay_ms(5000);
                 turnRightSharp();
-                LCD_WriteStringAtPos("TURN RIGHT     ",1,0);
                 direction = RIGHT;
             }
-            while(!PMODS_GetValue(1,3) && !PMODS_GetValue(1,4) && PMODS_GetValue(1,1) && !PMODS_GetValue(1,2)) {
+            while (!PMODS_GetValue(1, 3) && !PMODS_GetValue(1, 4) && PMODS_GetValue(1, 1) && !PMODS_GetValue(1, 2)) {
                 turnLeftSharp();
                 delay_ms(1500);
                 moveForward();
                 delay_ms(5000);
                 turnLeftSharp();
-                LCD_WriteStringAtPos("TURN LEFT      ",1,0);
                 direction = LEFT;
             }
-            if(!PMODS_GetValue(1,1) && !PMODS_GetValue(1,2) && !PMODS_GetValue(1,3) && !PMODS_GetValue(1,4)) {
+            if (!PMODS_GetValue(1, 1) && !PMODS_GetValue(1, 2) && !PMODS_GetValue(1, 3) && !PMODS_GetValue(1, 4)) {
                 finish();
             }
         }
@@ -215,6 +222,7 @@ void moveForward() {
     SRV_SetPulseMicroseconds0(clockwise);
     SRV_SetPulseMicroseconds1(counterClockwise);
 }
+
 void turnRight() {
     SRV_SetPulseMicroseconds0(1500);
     SRV_SetPulseMicroseconds1(counterClockwise);
@@ -223,22 +231,22 @@ void turnRight() {
 void turnRightSharp() {
     SRV_SetPulseMicroseconds0(counterClockwise);
     SRV_SetPulseMicroseconds1(counterClockwise);
-    
+
 }
 
-void turnLeft(){
+void turnLeft() {
     SRV_SetPulseMicroseconds0(clockwise);
     SRV_SetPulseMicroseconds1(1500);
 }
 
-void turnLeftSharp(){
+void turnLeftSharp() {
     SRV_SetPulseMicroseconds0(clockwise);
     SRV_SetPulseMicroseconds1(clockwise);
 }
 
 void finish() {
     SRV_SetPulseMicroseconds0(1500);
-    SRV_SetPulseMicroseconds1(1500); 
+    SRV_SetPulseMicroseconds1(1500);
     timing = 0;
     delay_ms(5000);
     LED_SetGroupValue(0xFF);
@@ -247,13 +255,12 @@ void finish() {
     turnLeft();
     delay_ms(3000);
     SRV_SetPulseMicroseconds0(1500);
-    SRV_SetPulseMicroseconds1(1500); 
+    SRV_SetPulseMicroseconds1(1500);
     celebrationSong();
     running = 0;
 }
 
-
-void delay_ms(int ms){
+void delay_ms(int ms) {
     int i, counter;
     for (counter = 0; counter < ms; counter++) {
         for (i = 0; i < 500; i++) {//300
@@ -262,17 +269,17 @@ void delay_ms(int ms){
 }
 
 void celebrationSong() {
-    TONE_Start(523,150);
-    TONE_Start(523,150);
-    TONE_Start(523,150);
-    TONE_Start(523,400);
-    TONE_Start(415,400);
-    TONE_Start(466,400);
-    TONE_Start(523,300);
+    TONE_Start(523, 150);
+    TONE_Start(523, 150);
+    TONE_Start(523, 150);
+    TONE_Start(523, 400);
+    TONE_Start(415, 400);
+    TONE_Start(466, 400);
+    TONE_Start(523, 300);
     delay_ms(50);
-    TONE_Start(466,100);
+    TONE_Start(466, 100);
     delay_ms(50);
-    TONE_Start(523,500);
+    TONE_Start(523, 500);
 }
 
 void update_SSD(int value) {
@@ -306,23 +313,43 @@ void update_SSD(int value) {
     SSD_WriteDigits(SSD1, SSD2, SSD3, SSD4, 0, 1, 0, 0);
 }
 
-void __ISR(_CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void){
+void readUltr() {
+    //delay_ms(200);
+    ultDist = ULTR_MeasureDist();
+    update_SSD(ultDist);
+    distance = (ultDist * 34300)*0.0000005;
+    if (distance >= 0 && distance < 5)
+        RGBLED_SetValue(255, 0, 0);
+    else if (distance >= 5 && distance < 10)
+        RGBLED_SetValue(255, 255, 0);
+    else if (distance >= 10 && distance < 50)
+        RGBLED_SetValue(0, 255, 0);
+    else
+        RGBLED_SetValue(0, 0, 255);
+
+    if (distance < 0)
+        sprintf(msg, "Range:%.2f cm\r\n", distance);
+    else
+        sprintf(msg, "Range:%.2f cm\r\n", distance);
+}
+
+
+void __ISR(_CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void) {
     mCTClearIntFlag();
-    if(BTN_GetValue('C') && !btnlock){
-        if(mode == READY){
+    if (BTN_GetValue('C') && !btnlock) {
+        if (mode == READY) {
             mode = TEST;
-        }
-        else{
+        } else {
             mode = READY;
         }
         btnlock = 1;
     }
-    if(!BTN_GetValue('C')){
+    if (!BTN_GetValue('C')) {
         btnlock = 0;
     }
-    
-    
-    if(timing == 1){
+
+
+    if (timing == 1) {
         update_SSD(counter);
     }
     counter++;
