@@ -97,6 +97,9 @@ int main(void) {
     TONE_Init();
     delay_ms(100);
     ULTR_Init(0,1,0,2);
+    delay_ms(100);
+    RGBLED_Init();
+    delay_ms(100);
 
 
     INTConfigureSystem(INT_SYSTEM_CONFIG_MULT_VECTOR);
@@ -316,7 +319,6 @@ void update_SSD(int value) {
 void readUltr() {
     //delay_ms(200);
     ultDist = ULTR_MeasureDist();
-    update_SSD(ultDist);
     distance = (ultDist * 34300)*0.0000005;
     if (distance >= 0 && distance < 5)
         RGBLED_SetValue(255, 0, 0);
